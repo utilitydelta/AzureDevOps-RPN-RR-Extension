@@ -60,6 +60,38 @@ function updateRPNOnForm(storedFields:StoredFieldReferences) {
                     service.setFieldValue(storedFields.rpnField, rpn);
                 });
             }
+
+            
+            var matchingRRSeverityValueFields = fields.filter(field => field.referenceName === storedFields.rr_svField);
+            var matchingRROccurenceFields = fields.filter(field => field.referenceName === storedFields.rr_ocField);
+            var matchingRRDetectionFields = fields.filter(field => field.referenceName === storedFields.rr_dtField);
+            var matchingRRUsersAffectedFields = fields.filter(field => field.referenceName === storedFields.rr_usersField); 
+            var matchingRRRPNFields = fields.filter(field => field.referenceName === storedFields.rr_rpnField);
+
+            //If this work item type has RPN, then update RPN
+            if ((matchingRRSeverityValueFields.length > 0) &&
+                (matchingRROccurenceFields.length > 0) &&
+                (matchingRRDetectionFields.length > 0) &&
+                (matchingRRUsersAffectedFields.length > 0) &&
+                (matchingRRRPNFields.length > 0)) {
+                service.getFieldValues([storedFields.rr_svField, storedFields.rr_ocField, storedFields.rr_dtField, storedFields.rr_usersField]).then((values) => {
+                    
+                    var severityValue  = +values[storedFields.rr_svField].toString().split('-')[0].trim();
+                    console.log("severityValue before is  %s", severityValue);
+                    //var severityNum = +severityValue.toString().split('-')[0].trim();
+                    //console.log("severityNum after is  %s", severityNum);
+                    var Occurence = +values[storedFields.rr_ocField].toString().split('-')[0].trim();
+                    var Detection = +values[storedFields.rr_dtField].toString().split('-')[0].trim();
+                    var UsersAffected = +values[storedFields.rr_usersField].toString().split('-')[0].trim();
+
+                    var rpn = 0;
+                    if (UsersAffected > 0) {
+                        rpn = (severityValue * Occurence * Detection *UsersAffected);
+                    }
+                    
+                    service.setFieldValue(storedFields.rr_rpnField, rpn);
+                });
+            }
         });
     });
 }
@@ -70,7 +102,12 @@ function updateRPNOnGrid(workItemId, storedFields:StoredFieldReferences):IPromis
         storedFields.ocField,
         storedFields.dtField,
         storedFields.usersField,
-        storedFields.rpnField
+        storedFields.rpnField,
+        storedFields.rr_svField,
+        storedFields.rr_ocField,
+        storedFields.rr_dtField,
+        storedFields.rr_usersField,
+        storedFields.rr_rpnField
     ];
 
     var deferred = Q.defer();
@@ -102,13 +139,33 @@ function updateRPNOnGrid(workItemId, storedFields:StoredFieldReferences):IPromis
                     deferred.resolve(updatedWorkItem);
                 });
             }
-            else {
-                deferred.reject("No relevant change to work item");
-            }
         }
-        else
-        {
-            deferred.reject("Unable to calculate RPN, please configure fields on the collection settings page.");
+        
+        if (storedFields.rr_rpnField !== undefined && storedFields.rr_dtField !== undefined) {     
+            var severityValue = +workItem.fields[storedFields.rr_svField].toString().split('-')[0].trim();
+            var Occurence = +workItem.fields[storedFields.rr_ocField].toString().split('-')[0].trim();
+            var Detection = +workItem.fields [storedFields.rr_dtField].toString().split('-')[0].trim();
+            var UsersAffected = +workItem.fields[storedFields.rr_usersField].toString().split('-')[0].trim();
+            // severityValue = severityValue.split('-')[0].trim();
+
+            var rpn = 0;
+            if (UsersAffected > 0) {
+                rpn = (severityValue * Occurence * Detection * UsersAffected);
+            }
+
+            var document = [{
+                from: null,
+                op: "add",
+                path: '/fields/' + storedFields.rr_rpnField,
+                value: rpn
+            }];
+
+            // Only update the work item if the RPN has changed
+            if (rpn != workItem.fields[storedFields.rpnField]) {
+                client.updateWorkItem(document, workItemId).then((updatedWorkItem:TFS_Wit_Contracts.WorkItem) => {
+                    deferred.resolve(updatedWorkItem);
+                });
+            }
         }
     });
 
@@ -131,6 +188,20 @@ var formObserver = (context) => {
                 else {
                     console.log("Unable to calculate RPN, please configure fields on the collection settings page.");    
                 }
+                
+                if (storedFields && storedFields.rr_svField && storedFields.rr_usersField && storedFields.rr_ocField && storedFields.rr_dtField && storedFields.rr_rpnField) {
+                    //If one of fields in the calculation changes
+                    if ((args.changedFields[storedFields.rr_svField] !== undefined) || 
+                        (args.changedFields[storedFields.rr_ocField] !== undefined) ||
+                        (args.changedFields[storedFields.rr_dtField] !== undefined) ||
+                        (args.changedFields[storedFields.rr_usersField] !== undefined)) {
+                            updateRPNOnForm(storedFields);
+                        }
+                }
+                else {
+                    console.log("Unable to calculate RR RPN, please configure fields on the collection settings page.");    
+                }
+
             }, (reason) => {
                 console.log(reason);
             });
@@ -144,6 +215,12 @@ var formObserver = (context) => {
                 else {
                     console.log("Unable to calculate RPN, please configure fields on the collection settings page.");
                 }
+                if (storedFields && storedFields.rr_svField && storedFields.rr_usersField && storedFields.rr_ocField && storedFields.rr_dtField && storedFields.rr_rpnField) {
+                    updateRPNOnForm(storedFields);
+                }
+                else {
+                    console.log("Unable to calculate RR RPN, please configure fields on the collection settings page.");
+                }
             }, (reason) => {
                 console.log(reason);
             });
@@ -155,7 +232,8 @@ var contextProvider = (context) => {
     return {
         execute: function(args) {
             GetStoredFields().then((storedFields:StoredFieldReferences) => {
-                if (storedFields && storedFields.svField && storedFields.usersField && storedFields.ocField && storedFields.dtField && storedFields.rpnField) {
+                if (storedFields && storedFields.svField && storedFields.usersField && storedFields.ocField && storedFields.dtField && storedFields.rpnField
+                    && storedFields.rr_svField && storedFields.rr_usersField && storedFields.rr_ocField && storedFields.rr_dtField && storedFields.rr_rpnField) {
                     var workItemIds = args.workItemIds;
                     var promises = [];
                     $.each(workItemIds, function(index, workItemId) {
@@ -181,5 +259,5 @@ var contextProvider = (context) => {
 }
 
 let extensionContext = VSS.getExtensionContext();
-VSS.register(`${extensionContext.publisherId}.${extensionContext.extensionId}.rpn-work-item-form-observer`, formObserver);
-VSS.register(`${extensionContext.publisherId}.${extensionContext.extensionId}.rpn-contextMenu`, contextProvider);
+VSS.register(`${extensionContext.publisherId}.${extensionContext.extensionId}.rpn-rr-work-item-form-observer`, formObserver);
+VSS.register(`${extensionContext.publisherId}.${extensionContext.extensionId}.rpn-rr-contextMenu`, contextProvider);

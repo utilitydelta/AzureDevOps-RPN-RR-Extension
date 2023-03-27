@@ -1,13 +1,14 @@
 {
     "public": true,
     "manifestVersion": 1,
-    "id": "RPN-extension",
-    "publisher": "symplr",
-    "version": "1.1.5",
-    "name": "RPN (Risk Priority Number)",
-    "description": "Auto calculates RPN (Risk Priority Number) per work item and stores it in a work item field.",
+    "id": "RPN-RR-extension",
+    "publisher": "UtilityDelta",
+    "version": "1.2.0",
+    "name": "RPN-RR (Risk Priority Number + Residual Risk)",
+    "description": "Auto calculates RPN (Risk Priority Number) and RR (Residual Risk) per work item and stores it in a work item field.",
     "categories": [ "Azure Boards" ],
     "tags": [
+        "RPN-RR",
         "RPN",
         "defect",
         "bug"
@@ -19,9 +20,9 @@
     ],
     "contributions": [
         {
-            "id": "rpn-work-item-form-observer",
+            "id": "rpn-rr-work-item-form-observer",
             "type": "ms.vss-work-web.work-item-notifications",
-            "description": "Update the 'RPN' field when other fields on the form change.",
+            "description": "Update the 'RPN' and 'RR' fields when other fields on the form change.",
             "targets": [
                 "ms.vss-work-web.work-item-form"
             ],
@@ -30,29 +31,29 @@
             }
         },
         {
-            "id": "rpn-settings-hub",
+            "id": "rpn-rr-settings-hub",
             "type": "ms.vss-web.hub",
-            "description": "Collection level settings experience for managing fields used to calculate RPN.",
+            "description": "Collection level settings experience for managing fields used to calculate RPN and RR.",
             "targets": [
                 "ms.vss-web.collection-admin-hub-group"
             ],
             "properties": {
-                "name": "RPN",
+                "name": "RPN-RR",
                 "uri": "rpnSettings.html"
             }
         },
         {
-            "id": "rpn-contextMenu",
+            "id": "rpn-rr-contextMenu",
             "type": "ms.vss-web.action",
-            "description": "Work item context menu action to update the RPN field value for the selected work items.",
+            "description": "Work item context menu action to update the RPN and RR field values for the selected work items.",
             "targets": [
                 "ms.vss-work-web.work-item-context-menu"
             ],
             "properties": {
-                "text": "Recalculate RPN values",
-                "title": "Update the RPN value for the selected work items",
+                "text": "Recalculate RPN-RR values",
+                "title": "Update the RPN-RR value for the selected work items",
                 "icon": "images/icon-refresh.png",
-                "groupId": "RPN",
+                "groupId": "RPN-RR",
                 "uri": "rpn.html"
             }
         }
@@ -99,12 +100,12 @@
     },
     "links": {
         "support": {
-            "uri": "mailto:jschneider@symplr.com"
+            "uri": "mailto:tyson@utilitydelta.io"
         }
     },
     "repository": {
         "type": "git",
-        "uri": "https://github.com/symplr-oss/AzureDevOps-RPN-Extension"
+        "uri": "https://github.com/utilitydelta/AzureDevOps-RPN-RR-Extension"
       },
     "branding": {
         "color": "rgb(220, 235, 252)",

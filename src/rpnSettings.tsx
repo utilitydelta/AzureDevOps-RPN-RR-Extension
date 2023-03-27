@@ -68,11 +68,28 @@ export class Settings {
                         break;
                     case "Detection":
                         that._selectedFields.dtField = fieldReferenceName;
+                        break;
                     case "UsersAffected":
                         that._selectedFields.usersField = fieldReferenceName;
                         break;
                     case "RPN":
                         that._selectedFields.rpnField = fieldReferenceName;
+                        break;
+
+                    case "RR Severity":
+                        that._selectedFields.rr_svField = fieldReferenceName;
+                        break;
+                    case "RR Occurence":
+                        that._selectedFields.rr_ocField = fieldReferenceName;
+                        break;
+                    case "RR Detection":
+                        that._selectedFields.rr_dtField = fieldReferenceName;
+                        break;
+                    case "RR UsersAffected":
+                        that._selectedFields.rr_usersField = fieldReferenceName;
+                        break;
+                    case "RR RPN":
+                        that._selectedFields.rr_rpnField = fieldReferenceName;
                         break;
                 }
                 that.updateSaveButton();
@@ -130,6 +147,24 @@ export class Settings {
         let rpnContainer = $("<div />").addClass("settings-control").appendTo(container);
         $("<label />").text("RPN Field").appendTo(rpnContainer);            
 
+        
+
+        let rr_svContainer = $("<div />").addClass("settings-control").appendTo(container);
+        $("<label />").text("RR Severity Field").appendTo(rr_svContainer);
+
+        let rr_ocContainer = $("<div />").addClass("settings-control").appendTo(container);
+        $("<label />").text("RR Occurence Field").appendTo(rr_ocContainer);
+
+        let rr_dtContainer = $("<div />").addClass("settings-control").appendTo(container);
+        $("<label />").text("RR Detection Values Field").appendTo(rr_dtContainer);
+
+        let rr_usersContainer = $("<div />").addClass("settings-control").appendTo(container);
+        $("<label />").text("RR Users Affected Values Field").appendTo(rr_usersContainer);
+
+        let rr_rpnContainer = $("<div />").addClass("settings-control").appendTo(container);
+        $("<label />").text("RR RPN Field").appendTo(rr_rpnContainer);            
+
+
         VSS.getService<IExtensionDataService>(VSS.ServiceIds.ExtensionData).then((dataService: IExtensionDataService) => {
             dataService.getValue<StoredFieldReferences>("storedFields").then((storedFields:StoredFieldReferences) => {
                 if (storedFields) {
@@ -144,7 +179,12 @@ export class Settings {
                         ocField: null,
                         dtField: null,
                         usersField: null,
-                        rpnField: null
+                        rpnField: null,
+                        rr_svField: null,
+                        rr_ocField: null,
+                        rr_dtField: null,
+                        rr_usersField: null,
+                        rr_rpnField: null
                     };
                 }
 
@@ -154,6 +194,13 @@ export class Settings {
                     Controls.create(Combo, dtContainer, this.getComboOptions("Detection", fieldList, this._selectedFields.dtField));
                     Controls.create(Combo, usersContainer, this.getComboOptions("UsersAffected", fieldList, this._selectedFields.usersField));
                     Controls.create(Combo, rpnContainer, this.getComboOptions("RPN", fieldList, this._selectedFields.rpnField));
+                    
+                    Controls.create(Combo, rr_svContainer, this.getComboOptions("RR Severity", fieldList, this._selectedFields.rr_svField));
+                    Controls.create(Combo, rr_ocContainer, this.getComboOptions("RR Occurence", fieldList, this._selectedFields.rr_ocField));
+                    Controls.create(Combo, rr_dtContainer, this.getComboOptions("RR Detection", fieldList, this._selectedFields.rr_dtField));
+                    Controls.create(Combo, rr_usersContainer, this.getComboOptions("RR UsersAffected", fieldList, this._selectedFields.rr_usersField));
+                    Controls.create(Combo, rr_rpnContainer, this.getComboOptions("RR RPN", fieldList, this._selectedFields.rr_rpnField));
+
                     this.updateSaveButton();
 
                     VSS.notifyLoadSucceeded();
@@ -174,7 +221,9 @@ export class Settings {
 
     private updateSaveButton() {
         var buttonState = (this._selectedFields.svField && this._selectedFields.ocField && this._selectedFields.dtField &&
-                            this._selectedFields.usersField && this._selectedFields.rpnField) && this._changeMade
+                            this._selectedFields.usersField && this._selectedFields.rpnField) && 
+                            (this._selectedFields.rr_svField && this._selectedFields.rr_ocField && this._selectedFields.rr_dtField &&
+                                this._selectedFields.rr_usersField && this._selectedFields.rr_rpnField) && this._changeMade
                             ? Menus.MenuItemState.None : Menus.MenuItemState.Disabled;
 
         // Update the disabled state
